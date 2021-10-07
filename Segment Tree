@@ -1,0 +1,59 @@
+
+//segtree array size=4*input array size
+//solve query in O(QlogN)
+
+//NOTE-for range sum queries use ll & not int
+
+void buildTree(int si,int ss,int se){
+    if(ss==se){
+        st[si]=arr[ss];
+        return ;
+    }
+
+    int mid=ss+(se-ss)/2; 
+
+    buildTree(2*si,ss,mid);
+    buildTree(2*si+1,mid+1,se);
+
+    st[si]=min(st[2*si],st[2*si+1]); //this is for range min query
+    //for range max query we do max(st[2*si],st[2*si +1]);
+    //for range sum query we do st[si]=st[2*si]+st[2*si +1];
+
+}
+
+//process queries
+int query(int si,int ss,int se,int qs,int qe){
+    if(qs>se || qe<ss)
+        return INT_MAX;     //completely outside
+    //for range sum query here return 0; 
+
+    if(ss>=qs && se<=qe)
+        return st[si];  //completely inside
+
+    int mid=ss+(se-ss)/2;
+    // int l=query(2*si,ss,mid,qs,qe);
+    // int r=query(2*si +1,mid+1,se,qs,qe);
+
+    return min(query(2*si,ss,mid,qs,qe),query(2*si +1,mid+1,se,qs,qe)); 
+    //for range max query return max(l,r);
+    //for range sum query return l+r;
+}
+
+//update points
+void update(int si,int ss,int se,int idx,int val){
+    if(ss==se){
+        arr[idx]=val;
+        st[si]=val;
+        return ;
+    }
+    int mid=ss+(se-ss)/2;
+    if(idx<=mid){
+        update(2*si,ss,mid,idx,val);
+    }
+    else{
+        update(2*si+1,mid+1,se,idx,val);
+    }
+    st[si]=min(st[2*si],st[2*si +1]); //recalculate with updated point
+    //for range max query max(st[2*si],st[2*si +1]);
+    //for range sum query st[si]=st[2*si]+st[2*si+1];
+}
