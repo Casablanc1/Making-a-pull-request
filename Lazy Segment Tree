@@ -1,0 +1,99 @@
+//we use lazy segtree for updating a range and answering queries in O(logN)
+//segtree array size=4*input array size
+//solve query in O(QlogN)
+
+//NOTE-for range sum queries use ll & not int
+
+int arr[100001],st[400001],lazy[400001];
+
+void buildTree(int si,int ss,int se){
+    if(ss==se){
+        st[si]=arr[ss];
+        return ;
+    }
+
+    int mid=ss+(se-ss)/2; 
+
+    buildTree(2*si,ss,mid);
+    buildTree(2*si+1,mid+1,se);
+
+    //st[si]=min(st[2*si],st[2*si+1]); //this is for range min query
+    //for range max query we do max(st[2*si],st[2*si +1]);
+    st[si]=st[2*si]+st[2*si +1];
+
+}
+
+//process queries
+int query(int si,int ss,int se,int qs,int qe){
+    //check pending updates,if true update req. val
+    //ans mark its childs updates as pending
+    if(lazy[si]!=0){
+        int temp=lazy[si];
+        st[si]+=temp*(se-ss+1); //we will update all values hence 
+        //sum=update_val*range size
+        //in case of max or min we just add it to the element 
+        //st[si]+=temp;
+        lazy[si]=0;
+
+        if(ss!=se){
+            lazy[2*si]+=temp;
+            lazy[2*si +1]+=temp;
+        }
+    }
+
+    if(qs>se || qe<ss)
+        return 0;     //completely outside
+    //for range sum query here return 0; 
+    //for max return INT_MIN;
+    //for min return INT_MAX;
+    if(ss>=qs && se<=qe)
+        return st[si];  //completely inside
+
+    int mid=ss+(se-ss)/2;
+    // int l=query(2*si,ss,mid,qs,qe);
+    // int r=query(2*si +1,mid+1,se,qs,qe);
+
+    return query(2*si,ss,mid,qs,qe)+query(2*si +1,mid+1,se,qs,qe); 
+    //for range max query return max(l,r);
+    //for range sum query return l+r;
+}
+
+//update range
+void update(int si,int ss,int se,int qs,int qe,int val){
+    //check pending updates,if true update req. val
+    //ans mark its childs updates as pending
+    if(lazy[si]!=0){
+        int temp=lazy[si];
+        st[si]+=temp*(se-ss+1); //we will update all values hence 
+        //sum=update_val*range size
+        //in case of max or min we just add it to the element 
+        //st[si]+=temp;
+        lazy[si]=0;
+
+        if(ss!=se){
+            lazy[2*si]+=temp;
+            lazy[2*si +1]+=temp;
+        }
+    }
+    
+    //we have to check whether range lies in query range
+    if(ss>qe || se<qs)
+        return;            //completely outside
+    if(ss>=qs && se<=qe){
+        st[si]+=(se-ss+1)*val; //completely inside
+
+        if(ss!=se){
+            lazy[2*si]+=val;
+            lazy[2*si +1]+=val;
+            return ;
+        }
+    }
+
+    int mid=ss+(se-ss)/2;
+    update(2*si,ss,mid,qs,qe,val);
+    update(2*si +1,mid+1,se,qs,qe,val);
+
+    //st[si]=min(st[2*si],st[2*si +1]); //recalculate with updated point
+    //for range max query max(st[2*si],st[2*si +1]);
+    st[si]=st[2*si]+st[2*si+1];
+}
